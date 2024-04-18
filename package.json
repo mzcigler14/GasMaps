@@ -1,0 +1,37 @@
+{
+  "homepage": "http://mzcigler14.github.io/GoogleGas",
+  "name": "googlegas",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.1",
+    "@react-google-maps/api": "^2.19.2",
+    "bootstrap": "^3.4.1",
+    "fs": "^0.0.1-security",
+    "react": "^18.2.0",
+    "react-bootstrap-typeahead": "^6.3.2",
+    "react-dom": "^18.2.0",
+    "react-google-places-autocomplete": "^4.0.1",
+    "use-places-autocomplete": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.2",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.1.0",
+    "dotenv": "^16.3.1",
+    "gh-pages": "^6.1.1",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0"
+  }
+}
