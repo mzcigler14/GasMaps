@@ -11,11 +11,14 @@ import GasStationWidget from "./components/GasStationWidget";
 import calculateRoute from "./functions/calculateRoute";
 import calculateEmpty from "./functions/calculateEmpty.js";
 import findGasStations from "./functions/findGasStations.js";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import distanceLatLngPts from "./functions/distanceLatLngPts.js";
 interface InputState {
   origin: google.maps.LatLng;
   destination: google.maps.LatLng;
   distance: number;
+  departure: Date;
 }
 
 //ISSUES:
@@ -44,6 +47,7 @@ function AppLoaded() {
     origin: new google.maps.LatLng(0, 0),
     destination: new google.maps.LatLng(0, 0),
     distance: 0,
+    departure: new Date(),
   });
   const [mapOrigin, setMapOrigin] = useState<google.maps.LatLng>(
     new google.maps.LatLng(0, 0)
@@ -63,12 +67,14 @@ function AppLoaded() {
   const handleSearch = (
     org: google.maps.LatLng,
     dest: google.maps.LatLng,
-    dist: number
+    dist: number,
+    dept: Date
   ) => {
     setInputState({
       origin: org,
       destination: dest,
       distance: dist,
+      departure: dept,
     });
   };
 
@@ -107,7 +113,8 @@ function AppLoaded() {
           searchOffset,
           emptyPt,
           inputState.origin,
-          searchOffset
+          searchOffset,
+          inputState.departure
         )
           .then((result) => {
             console.log(result.GasStations);
@@ -209,67 +216,72 @@ function AppLoaded() {
 
   return (
     <>
-      <Header></Header>
-      <InputBar onSearch={handleSearch}></InputBar>
-      <div className="map-style">
-        <GoogleMap
-          mapContainerClassName="map-style"
-          center={mapOrigin}
-          zoom={zoom}
-        >
-          {directions !== null && (
-            <DirectionsRenderer directions={directions} />
-          )}
-          {gasStations &&
-            gasStations?.length > 0 &&
-            gasStations.map(
-              (station, index) =>
-                station.geometry &&
-                station.geometry.location && (
-                  <Marker
-                    key={index}
-                    position={{
-                      lat: station.geometry.location.lat(),
-                      lng: station.geometry.location.lng(),
-                    }}
-                    onClick={() => {
-                      setSelectedGasStation(station);
-                      if (station.geometry && station.geometry.location) {
-                        setMapOrigin(
-                          new google.maps.LatLng({
-                            lat: station.geometry.location.lat(),
-                            lng: station.geometry.location.lng(),
-                          })
-                        );
-                      }
-                    }}
-                  />
-                )
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Header></Header>
+        <InputBar onSearch={handleSearch}></InputBar>
+        <div className="map-style">
+          <GoogleMap
+            mapContainerClassName="map-style"
+            center={mapOrigin}
+            zoom={zoom}
+          >
+            {directions !== null && (
+              <DirectionsRenderer directions={directions} />
             )}
-          ;
-          {emptyPt && (
-            <Marker
-              position={{
-                lat: emptyPt.lat(),
-                lng: emptyPt.lng(),
-              }}
-              label={{
-                text: "Point of Empty",
-                color: "black",
-                fontSize: "16px",
-              }}
-            />
+            {gasStations &&
+              gasStations?.length > 0 &&
+              gasStations.map(
+                (station, index) =>
+                  station.geometry &&
+                  station.geometry.location && (
+                    <Marker
+                      key={index}
+                      position={{
+                        lat: station.geometry.location.lat(),
+                        lng: station.geometry.location.lng(),
+                      }}
+                      onClick={() => {
+                        setSelectedGasStation(station);
+                        if (station.geometry && station.geometry.location) {
+                          setMapOrigin(
+                            new google.maps.LatLng({
+                              lat: station.geometry.location.lat(),
+                              lng: station.geometry.location.lng(),
+                            })
+                          );
+                        }
+                      }}
+                    />
+                  )
+              )}
+            ;
+            {emptyPt && (
+              <Marker
+                position={{
+                  lat: emptyPt.lat(),
+                  lng: emptyPt.lng(),
+                }}
+                label={{
+                  text: "Empty",
+                  color: "black",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  className: "custom-marker-label",
+                }}
+              />
+            )}
+            ;
+          </GoogleMap>
+          {selectedGasStation && (
+            <GasStationWidget
+              selectedStation={selectedGasStation}
+              gasDirections={gasDirections}
+              datetime={inputState.departure}
+              onClick={handleStationChosen}
+            ></GasStationWidget>
           )}
-          ;
-        </GoogleMap>
-        {selectedGasStation && (
-          <GasStationWidget
-            selectedStation={selectedGasStation}
-            gasDirections={gasDirections}
-            onClick={handleStationChosen}
-          ></GasStationWidget>
-        )}
-      </div>
+        </div>
+      </LocalizationProvider>
     </>
   );
 }

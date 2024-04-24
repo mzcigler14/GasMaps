@@ -57,29 +57,32 @@
     background-color: white; /* Set background color */
     border-radius: 20px; /* Add rounded corners for a bubbly effect */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
-    display: flex; /* Enable flexbox layout */
     align-items: center; /* Center align items vertically */
-    justify-content: center; /* Center align items horizontally */
+    /* justify-content: center; Center align items horizontally */
     position: fixed; /* Fixed positioning */
     top: 350px; /* Distance from the top */
-    height: 400px; /* Set a specific height */
-    width: 20%; /* Set a specific width */
-    padding: 16px; /* Add some padding inside the widget */
+    /* height: 400px; Set a specific height */
+    width: 25%; /* Set a specific width */
+    padding: 20px; /* Add some padding inside the widget */
     z-index: 102; /* Ensure it's above other elements but below the header */
     font-family: 'Arial', sans-serif; /* Set a default font */
+    display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    height: auto
   }
   
   
   .station-widget h2 {
-    margin: 0; /* Remove default margin for the heading */
+    margin: 20; /* Remove default margin for the heading */
     color: #333; /* Set text color */
     font-size: 2rem; /* Increase font size for the heading */
-    margin-bottom: 8px; /* Add a bit of spacing below the heading */
+    text-align: center
+    /* margin-bottom: 8px; Add a bit of spacing below the heading */
   }
   
   .station-widget p {
-    margin: 0; /* Remove default margin for paragraphs */
+    margin: 10; /* Remove default margin for paragraphs */
     color: #666; /* Set text color */
     font-size: 2rem; /* Set font size for paragraphs */
   }
@@ -88,5 +91,10 @@
     color: #007bff; /* Set link color */
     text-decoration: none; /* Remove underline from links */
     margin-left: 8px; /* Add a small margin to the left of links */
+  }
+
+  .custom-marker-label {
+    position: relative;
+    top: -25px; /* Adjust as needed to position the label above the marker */
   }
   

@@ -2,10 +2,12 @@ import Button from "@mui/material/Button";
 import "../styles.css";
 import calculateETA from "../functions/calculateETA";
 import { useEffect, useState } from "react";
+import getPlaceDetails from "../functions/getPlaceDetails";
 
 interface props {
   selectedStation: google.maps.places.PlaceResult | null;
   gasDirections: google.maps.DirectionsResult | null;
+  datetime: Date;
   onClick: () => void;
 }
 
@@ -29,14 +31,22 @@ interface props {
 const GasStationWidget = ({
   selectedStation,
   gasDirections,
+  datetime,
   onClick,
 }: props) => {
   const [eta, setEta] = useState<Date | String>();
   useEffect(() => {
     if (gasDirections) {
-      setEta(calculateETA(gasDirections));
+      setEta(calculateETA(gasDirections, datetime));
+      console.log(selectedStation?.opening_hours?.isOpen(new Date()));
     }
   }, [gasDirections]);
+
+  useEffect(() => {
+    if (selectedStation) {
+      getPlaceDetails(selectedStation);
+    }
+  }, [selectedStation]);
 
   const handleUseGasStation = () => {
     onClick();

@@ -1,5 +1,7 @@
 import distanceLatLngPts from "../functions/distanceLatLngPts.js";
 import calculateEmpty from "../functions/calculateEmpty.js";
+import calculateRoute from "./calculateRoute.js";
+import calculateETA from "./calculateETA.js";
 
 //need to give directions and calculate next point to calc from
 interface FindGasResults {
@@ -14,7 +16,8 @@ const findGasStations = (
   searchRadius: number,
   emptyPt: google.maps.LatLng,
   origin: google.maps.LatLng,
-  searchOffset: number
+  searchOffset: number,
+  datetime: Date
 ): Promise<FindGasResults> => {
   const placesService = new google.maps.places.PlacesService(
     document.createElement("div")
@@ -40,7 +43,51 @@ const findGasStations = (
         };
         placesService.nearbySearch(request, (results, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            gasStations.push(...results);
+            results.forEach(function (placei) {
+              let placeid = placei?.place_id;
+              if (placeid) {
+                placesService.getDetails(
+                  { placeId: placeid },
+                  (result, status) => {
+                    if (
+                      status === google.maps.places.PlacesServiceStatus.OK &&
+                      result
+                    ) {
+                      let placeDetails = result;
+                      if (
+                        result.geometry?.location?.lat() &&
+                        result.geometry?.location?.lng()
+                      ) {
+                        try {
+                          calculateRoute(
+                            origin,
+                            new google.maps.LatLng({
+                              lat: result.geometry?.location.lat(),
+                              lng: result.geometry?.location?.lng(),
+                            })
+                          )
+                            .then((result) => {
+                              let route = result;
+                              if (route) {
+                                let eta = calculateETA(route, datetime);
+                                if (placeDetails.opening_hours?.isOpen(eta)) {
+                                  gasStations.push(...[placeDetails]);
+                                }
+                              }
+                            })
+                            .catch((error) => {
+                              alert(error.message);
+                            });
+                        } catch (error) {
+                          console.error("Error fetching data:", error);
+                        }
+                      }
+                    }
+                  }
+                );
+              }
+            });
+
             // Adjust zoom level if necessary
             zoomLevel = Math.round(
               14 - Math.log(searchOffset / 500) / Math.LN2

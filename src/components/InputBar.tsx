@@ -2,7 +2,10 @@ import Button from "@mui/material/Button";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import NumberInput from "./NumberInput";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import CircularProgress from "@mui/material/CircularProgress";
+import dayjs, { Dayjs } from "dayjs";
+
 import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
@@ -13,7 +16,8 @@ import * as React from "react";
 type searchHandler = (
   origin: google.maps.LatLng,
   dest: google.maps.LatLng,
-  distance: number
+  distance: number,
+  departure: Date
 ) => void;
 
 interface props {
@@ -52,6 +56,7 @@ const InputBar = ({
     new google.maps.LatLng(0, 0)
   );
   const [distance, setDistance] = useState<number>();
+  const [departure, setDeparture] = useState<Date>(new Date());
 
   const [o, setO] = useState<string>("");
   const [d, setD] = useState<string>("");
@@ -148,9 +153,15 @@ const InputBar = ({
   const handleDistance = (value: number) => {
     setDistance(value);
   };
+
+  const handleDeparture = (e: Dayjs | null) => {
+    if (e != null) {
+      setDeparture(new Date(1000 * e.unix()));
+    }
+  };
   const handleFindGas = () => {
-    if (origin && destination && distance) {
-      onSearch(origin, destination, distance);
+    if (origin && destination && distance && departure) {
+      onSearch(origin, destination, distance, departure);
     }
   };
   return (
@@ -234,6 +245,14 @@ const InputBar = ({
         )}
       />
       <NumberInput setDistance={handleDistance}></NumberInput>
+      <div>
+        <DateTimePicker
+          label="Departure Date/Time"
+          value={dayjs(departure)}
+          onChange={handleDeparture}
+        ></DateTimePicker>
+      </div>
+
       <div>
         <Button
           onClick={handleFindGas}
