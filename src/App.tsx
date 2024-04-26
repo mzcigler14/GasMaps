@@ -1,3 +1,11 @@
+/*
+ * File: App.tsx
+ * Author: Matjaz Cigler
+ * Project: GasMaps
+ * Date: 2023-04-26
+ * Description: This is the main app component that brings together the web app.
+ * At a high level it displays the headerr, input bar and google map.
+ */
 import { useEffect, useState } from "react";
 import {
   useJsApiLoader,
@@ -14,6 +22,7 @@ import findGasStations from "./functions/findGasStations.js";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import distanceLatLngPts from "./functions/distanceLatLngPts.js";
+import SearchLoadingWidget from "./components/SearchLoadingWidget";
 interface InputState {
   origin: google.maps.LatLng;
   destination: google.maps.LatLng;
@@ -21,11 +30,8 @@ interface InputState {
   departure: Date;
 }
 
-//ISSUES:
-//When the user updates the distance or origin or location the site does not work
-//for instance changing the distance will work but will not reset the search radius
-//leading the suboptimal results
 function App() {
+  //show load page until the api is ready
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: import.meta.env.VITE_REACT_APP_API_KEY,
@@ -63,13 +69,16 @@ function AppLoaded() {
   const [selectedGasStation, setSelectedGasStation] =
     useState<google.maps.places.PlaceResult | null>();
   const [searchOffset, setSearchOffset] = useState<number>(5000);
+  const [loadingSearch, setLoadingSearch] = useState<boolean>(false);
 
+  //when the user clicks search the input state is set
   const handleSearch = (
     org: google.maps.LatLng,
     dest: google.maps.LatLng,
     dist: number,
     dept: Date
   ) => {
+    setLoadingSearch(true);
     setInputState({
       origin: org,
       destination: dest,
@@ -78,6 +87,41 @@ function AppLoaded() {
     });
   };
 
+  //once the input state is set all old states are cleared from the map
+  useEffect(() => {
+    setGasStations([]);
+    setSelectedGasStation(null);
+    setMapOrigin(inputState.origin);
+    //if it is the first search (directions are null), the route is calculated
+    if (directions === null) {
+      Route(inputState.origin, inputState.destination, setDirections);
+      //if the directions are not null, they are cleared
+    } else {
+      setDirections(null);
+    }
+  }, [inputState]);
+
+  useEffect(() => {
+    //on the directions statte being updated if the directions are null then they
+    //are calculated
+    if (directions === null) {
+      Route(inputState.origin, inputState.destination, setDirections);
+      //if the directions are present than the point of empty on the route is calculated
+    } else {
+      EmptyCalc(directions, setEmptyPt, inputState.distance, searchOffset);
+    }
+  }, [directions]);
+
+  //on the emptyPt calculations and state update (location of gas being empty minus the searchOffset)
+  //gasstations within the search radius are searched for
+  useEffect(() => {
+    if (emptyPt) {
+      allGasStations(setMapOrigin, setZoom, setGasStations);
+    }
+  }, [emptyPt]);
+
+  //asynchronous function to find a route, proper way to use is call and then have a useEffect
+  //that catches the state update from its results to avoid outdated or empty states
   const Route = async (
     orig: google.maps.LatLng,
     dest: google.maps.LatLng,
@@ -98,6 +142,8 @@ function AppLoaded() {
     }
   };
 
+  //finds all relavent gas stations, then sets the gas stations states once completed
+  //again use a useEffect with the gas station state to ensure gas stations are up to date
   const allGasStations = async (
     setMapOrigin: React.Dispatch<React.SetStateAction<google.maps.LatLng>>,
     setZoom: React.Dispatch<React.SetStateAction<number>>,
@@ -127,6 +173,7 @@ function AppLoaded() {
             );
             setZoom(result.zoom);
             setMapOrigin(result.center);
+            setLoadingSearch(false);
           })
           .catch((error) => {
             alert(error.message);
@@ -136,7 +183,7 @@ function AppLoaded() {
       console.error("Error getting gas stations:", error);
     }
   };
-
+  //calculate the point where the car will be on empty
   const EmptyCalc = (
     directions: google.maps.DirectionsResult | null,
     setAction: React.Dispatch<React.SetStateAction<google.maps.LatLng | null>>,
@@ -148,34 +195,8 @@ function AppLoaded() {
     }
   };
 
-  useEffect(() => {
-    setDirections(null);
-    setGasDirections(null);
-    setGasStations([]);
-    setSelectedGasStation(null);
-    setMapOrigin(inputState.origin);
-    Route(inputState.origin, inputState.destination, setDirections);
-  }, [inputState]);
-
-  //if not route yet, route is found otherwise the
-  //location where gas will run out (minus 5km) is found
-  useEffect(() => {
-    if (directions === null) {
-      Route(inputState.origin, inputState.destination, setDirections);
-    } else {
-      EmptyCalc(directions, setEmptyPt, inputState.distance, searchOffset);
-    }
-  }, [directions]);
-
-  //on the emptyPt (location of gas being empty minus the searchOffset) being calculated
-  //gasstations within the search radius are searched for, if non are found the serach radius
-  // is incremented and the next useEffect is triggered
-  useEffect(() => {
-    if (emptyPt) {
-      allGasStations(setMapOrigin, setZoom, setGasStations);
-    }
-  }, [emptyPt]);
-
+  //when the use selectes a gas station the route is found so that the eta within th
+  //gas station widget can be calculated
   useEffect(() => {
     if (
       selectedGasStation &&
@@ -195,6 +216,8 @@ function AppLoaded() {
     }
   }, [selectedGasStation]);
 
+  //when a gas station is confirmed (find route clicked)
+  //directions to that gas station are displayed.
   const handleStationChosen = () => {
     if (
       selectedGasStation &&
@@ -207,7 +230,7 @@ function AppLoaded() {
           lat: selectedGasStation.geometry.location.lat(),
           lng: selectedGasStation.geometry.location.lng(),
         }),
-        setGasDirections
+        setDirections
       );
     } else {
       console.log("no station selected");
@@ -219,15 +242,14 @@ function AppLoaded() {
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <Header></Header>
         <InputBar onSearch={handleSearch}></InputBar>
+        {loadingSearch && <SearchLoadingWidget></SearchLoadingWidget>}
         <div className="map-style">
           <GoogleMap
             mapContainerClassName="map-style"
             center={mapOrigin}
             zoom={zoom}
           >
-            {directions !== null && (
-              <DirectionsRenderer directions={directions} />
-            )}
+            {directions && <DirectionsRenderer directions={directions} />}
             {gasStations &&
               gasStations?.length > 0 &&
               gasStations.map(
@@ -285,4 +307,3 @@ function AppLoaded() {
     </>
   );
 }
-//need to render a second map that gives the directions from

@@ -1,3 +1,12 @@
+/*
+ * File: distanceLatLngPts.tsx
+ * Author: Matjaz Cigler
+ * Project: GasMaps
+ * Date: 2023-04-26
+ * Description: This function calculates the distance between two coordinates
+ * using the haversine Equation.
+ */
+
 import toRadians from "./toRadians";
 const distanceLatLngPts = (
   lat1: number,

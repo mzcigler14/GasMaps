@@ -1,3 +1,12 @@
+/*
+ * File: calculateRoute.tsx
+ * Author: Matjaz Cigler
+ * Project: GasMaps
+ * Date: 2023-04-26
+ * Description: Based off a given origin and destination this function uses
+ * the google maps API to get the best directions.
+ */
+
 const calculateRoute = (
   origin: google.maps.LatLng,
   destination: google.maps.LatLng

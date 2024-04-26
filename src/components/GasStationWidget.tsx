@@ -1,8 +1,16 @@
+/*
+ * File: GasStationWidget.tsx
+ * Author: Matjaz Cigler
+ * Project: GasMaps
+ * Date: 2023-04-26
+ * Description: When a gas station is selected this widget pops up and give information about
+ * the specific gas station.
+ */
+
 import Button from "@mui/material/Button";
 import "../styles.css";
 import calculateETA from "../functions/calculateETA";
 import { useEffect, useState } from "react";
-import getPlaceDetails from "../functions/getPlaceDetails";
 
 interface props {
   selectedStation: google.maps.places.PlaceResult | null;
@@ -11,23 +19,6 @@ interface props {
   onClick: () => void;
 }
 
-// const getDayName = (dayNumber: number) => {
-//   const days = [
-//     "Sunday",
-//     "Monday",
-//     "Tuesday",
-//     "Wednesday",
-//     "Thursday",
-//     "Friday",
-//     "Saturday",
-//   ];
-//   return days[dayNumber];
-// };
-
-// const formatTime = (time: string) => {
-//   const [hours, minutes] = time.split(":");
-//   return `${hours}:${minutes}`;
-// };
 const GasStationWidget = ({
   selectedStation,
   gasDirections,
@@ -35,19 +26,15 @@ const GasStationWidget = ({
   onClick,
 }: props) => {
   const [eta, setEta] = useState<Date | String>();
+  //when a new gas station is selected and the directions are passed in the
+  //eta is calculated.
   useEffect(() => {
     if (gasDirections) {
       setEta(calculateETA(gasDirections, datetime));
-      console.log(selectedStation?.opening_hours?.isOpen(new Date()));
     }
   }, [gasDirections]);
 
-  useEffect(() => {
-    if (selectedStation) {
-      getPlaceDetails(selectedStation);
-    }
-  }, [selectedStation]);
-
+  //when gas find route button is clicked the route to the selectedd gas station is displayed.
   const handleUseGasStation = () => {
     onClick();
   };
@@ -57,27 +44,24 @@ const GasStationWidget = ({
       {selectedStation ? (
         <>
           <h2>{selectedStation.name}</h2>
-          {/* <p>Opening Hours:</p>
-          <ul>
-            {selectedStation.opening_hours?.periods?.map((period, index) => (
-              <li key={index}>
-                {getDayName(period.open.day)}: {formatTime(period.open.time)} -{" "}
-                {period.close && formatTime(period.close.time)}
-              </li>
-            ))}
-          </ul> */}
+
           {eta instanceof Date ? (
             <p>
               ETA:{" "}
-              {`${eta.getHours()}:${String(eta.getMinutes()).padStart(
-                2,
-                "0"
-              )}:${String(eta.getSeconds()).padStart(2, "0")}`}
+              {`${eta.getHours()}:${String(eta.getMinutes()).padStart(2, "0")}`}
             </p>
           ) : (
             <p>No ETA found</p>
           )}
+
           <p>Rating: {selectedStation.rating}</p>
+          <p>
+            {selectedStation.opening_hours?.weekday_text
+              ? selectedStation.opening_hours.weekday_text[
+                  datetime.getDay() == 0 ? 7 : datetime.getDay() - 1
+                ]
+              : "No Hours"}
+          </p>
         </>
       ) : (
         <p>No gas station selected.</p>

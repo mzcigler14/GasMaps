@@ -1,3 +1,12 @@
+/*
+ * File: NumberInput.tsx
+ * Author: Matjaz Cigler
+ * Project: GasMaps
+ * Date: 2023-04-26
+ * Description: This is a text imput component modified to allow only number inputs
+ * adds arrows that can increment the number by 50.
+ */
+
 import React, { useState, ChangeEvent } from "react";
 import TextField from "@mui/material/TextField";
 
